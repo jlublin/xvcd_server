@@ -19,7 +19,7 @@
 
 import socketserver
 import bitstring
-from jtag_xula import jtag_xula
+from adapters.jtag_xula import jtag_xula
 from math import ceil
 
 class xvcd_server(socketserver.BaseRequestHandler):
