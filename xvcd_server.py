@@ -22,14 +22,12 @@ import bitstring
 from jtag_xula import jtag_xula
 from math import ceil
 
-# Single client for now, deny other requests
-has_client_connected = False
-
-jtag = None
-
 class xvcd_server(socketserver.BaseRequestHandler):
 
     def handle(self):
+        global has_client_connected
+        global jtag
+
         if(has_client_connected):
             return
         has_client_connected = True
@@ -98,6 +96,12 @@ class xvcd_server(socketserver.BaseRequestHandler):
 
 
 if(__name__ == '__main__'):
+
+    # Single client for now, deny other requests
+    global has_client_connected
+    has_client_connected = False
+
+    global jtag
     jtag = jtag_xula()
 
     server = socketserver.TCPServer(('localhost', 2542), xvcd_server)
