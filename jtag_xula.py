@@ -61,7 +61,7 @@ class jtag_xula:
         xula = None
         for bus in buses:
             for device in bus.devices:
-                if(device.idVendor == 0x04d8 and device.idProduct == 0xff8c)s:
+                if(device.idVendor == 0x04d8 and device.idProduct == 0xff8c):
                     xula = device
 
         if(xula == None):
