@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+
+#------------------------------------------------------------------------------
+# Copyright 2013 Joachim Lublin (joachim.lublin@gmail.com)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#------------------------------------------------------------------------------
+
+import socketserver
+import bitstring
+from jtag_xula import jtag_xula
+from math import ceil
+
+# Single client for now, deny other requests
+has_client_connected = False
+
+jtag = None
+
+class xvcd_server(socketserver.BaseRequestHandler):
+
+    def handle(self):
+        if(has_client_connected):
+            return
+        has_client_connected = True
+
+        while(True):
+            data = self.request.recv(1024)
+            
+            try:
+                [cmd, args] = data.split(b':')
+            except ValueError:
+                print('Invalid data received')
+                return
+
+            if(cmd != b'shift'):
+                print('Unknown command: {}'.format(cmd))
+                return
+
+            n_bits = int.from_bytes(args[0:4], 'little')
+            n_bytes = ceil(n_bits/8)
+            data_bytes_read = len(args) - 4
+
+            # Read more data here if not everything has arrived
+            while(data_bytes_read < 2*n_bytes):
+                args += self.request.recv(1024)
+                data_bytes_read = len(args) - 4
+            
+            # Split args in TMS data and TDI data
+            args = [args[4:(4+n_bytes)], args[(4+n_bytes):(4+2*n_bytes)]]
+
+            print('Bit string size: {}\tNumber of bytes {}'.format(n_bits, n_bytes)) 
+
+            TMS = bitstring.pack('bytes:{}'.format(n_bytes), args[0])
+            TDI = bitstring.pack('bytes:{}'.format(n_bytes), args[1])
+
+            # Fix LSB first
+            TMS.byteswap()
+            TMS.reverse()
+            TDI.byteswap()
+            TDI.reverse()
+
+            TMS = TMS[0:n_bits]
+            TDI = TDI[0:n_bits]
+
+            print('TMS: {}\tTDI: {}'.format(TMS.bin, TDI.bin))
+
+            # TODO: Track jtag state to verify that we are in Exit-IR
+            if(TMS == bitstring.BitStream('0b11101')):
+                print('Avoiding "route via Capture-IR"-bug')
+                self.request.sendall(b'\x1f')
+                continue
+
+            TDO = jtag.send_data(TMS, TDI)
+
+            print('TDO: {}'.format(TDO.bin))
+
+            # Add padding
+            TDO += bitstring.BitStream((8 - TDO.len) % 8)
+            TDO.reverse()
+            TDO.byteswap()
+
+            self.request.sendall(TDO.tobytes())
+
+        # TODO: Fix network code so we can get here
+        has_client_connected = False
+
+
+
+if(__name__ == '__main__'):
+    jtag = jtag_xula()
+
+    server = socketserver.TCPServer(('localhost', 2542), xvcd_server)
+    server.serve_forever()
+
