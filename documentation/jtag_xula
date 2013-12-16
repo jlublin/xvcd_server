@@ -1,0 +1,41 @@
+
+First package far JTAG_CMD has the following structure
+
+struct // JTAG_CMD structure
+{
+    USBCMD cmd;
+    DWORD  num_clks;
+    BYTE   flags;
+};
+
+// Definitions for JTAG_CMD
+#define JTAG_CMD_HDR_LEN 6
+
+// Flag bits for JTAG_CMD
+#define GET_TDO_MASK 0x01	// Set if gathering TDO bits.
+#define PUT_TMS_MASK 0x02	// Set if TMS bits are included in the packets.
+#define TMS_VAL_MASK 0x04	// Static value for TMS if PUT_TMS_MASK is cleared.
+#define PUT_TDI_MASK 0x08	// Set if TDI bits are included in the packets.
+#define TDI_VAL_MASK 0x10	// Static value for TDI if PUT_TDI_MASK is cleared.
+
+#define USBGEN_EP_SIZE 32U
+
+If only using one of GET_TDO_MASK or GET_TDO_MASK and not PUT_TMS_MASK, the
+adapter will use MSSP for greater JTAG performance, otherwise bit-banging
+is used. Final usb package with data is always bit-banged.
+
+The bitstreams uses a byte array with 0:th bytes LSB (Least Significant Bit) as
+first bit. When both TMS and TDI is sent the bitstreams are interlaced as
+follows
+
+<TMS byte 0><TDI byte 0><TMS byte 1><TDI byte 1>...
+
+with first bit of each byte being the LSB.
+
+First package should also contain data after the JTAG_CMD header. Each package
+is maximum 32 bytes which leaves 26 bytes data.
+
+Bits after the data in the last byte can be anything, XuLA doesn't care about
+these.
+
+
