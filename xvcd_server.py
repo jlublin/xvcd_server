@@ -33,30 +33,36 @@ class xvcd_server(socketserver.BaseRequestHandler):
         has_client_connected = True
 
         while(True):
-            data = self.request.recv(1024)
+
+            try:
+                data = self.request.recv(10)
+            except ConnectionResetError:
+                print('Connection reset by peer')
+                break
             
             try:
-                [cmd, args] = data.split(b':')
+                [cmd, length] = data.split(b':')
             except ValueError:
                 print('Invalid data received, closing connection')
                 self.finish()
                 break
 
-            if(cmd != b'shift'):
-                print('Unknown command: {}'.format(cmd))
-                return
+            if(cmd != b'shift' or len(length) != 4):
+                print('Unknown command: {} or bad format "{}"'.format(cmd, data))
+                break
 
-            n_bits = int.from_bytes(args[0:4], 'little')
+            n_bits = int.from_bytes(length, 'little')
             n_bytes = ceil(n_bits/8)
-            data_bytes_read = len(args) - 4
+            data_bytes_read = 0
+            args = b''
 
             # Read more data here if not everything has arrived
             while(data_bytes_read < 2*n_bytes):
-                args += self.request.recv(1024)
-                data_bytes_read = len(args) - 4
+                args += self.request.recv(min(1024, 2*n_bytes))
+                data_bytes_read = len(args)
             
             # Split args in TMS data and TDI data
-            args = [args[4:(4+n_bytes)], args[(4+n_bytes):(4+2*n_bytes)]]
+            args = [args[0:n_bytes], args[n_bytes:2*n_bytes]]
 
             print('Bit string size: {}\tNumber of bytes {}'.format(n_bits, n_bytes)) 
 
