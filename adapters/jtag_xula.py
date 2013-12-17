@@ -20,6 +20,7 @@ from bitstring import BitStream
 from adapters.jtag import jtag
 import usb
 import sys
+import struct
 
 # Definitions of commands sent in USB packets.
 
