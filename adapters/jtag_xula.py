@@ -55,11 +55,6 @@ AIO0_ADC_CMD           = 0x60  # Do an ADC conversion on AIO0 (AN6 pin on pic)
 AIO1_ADC_CMD           = 0x61  # Do an ADC conversion on AIO1 (AN11 pin on pic)
 RESET_CMD              = 0xff  # Cause a power-on reset.
 
-# TODO
-# Need better performance for programming, look at bulktdi in class XuLA
-# Bulkdata will have only TMS=0 (except possibly at end of programming), use TDI_TDO_CMD
-# for less bandwidth. Only TDI_CMD? Track state to optimize?
-
 class jtag_xula(jtag):
 
     def __init__(self):
