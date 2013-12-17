@@ -1,5 +1,44 @@
+TDI_TDO_CMD seems to hang at too high speeds. We might need to track IR to
+determine if TDI_CMD or TDO_CMD is in place...
 
-First package far JTAG_CMD has the following structure
+===================
+The following describes the TDI_TDO_CMD which should be suitable for this
+project.
+===================
+
+This command assumes JTAG state is "Shift DR" or "Shift IR" and on the last
+bit it will send TMS=1 and move the state to "Exit 1 DR" or "Exit 1 IR".
+Because of the last TMS we either need to know the exact length before we
+start sending data (we don't in the xvc protocol) or we will have to go back
+to "Shift DR" or "Shift IR" via TMS="010"
+
+struct // JTAG_CMD structure
+{
+    USBCMD cmd;
+    DWORD  num_clks;
+    BYTE   flags;
+};
+
+JTAG_CMD structure seems to be used for command package with flags unused.
+Data begins in second package and packages should be filled until the final
+package. Field "cmd" is little-endian.
+
+The bitstreams uses a byte array with 0:th bytes LSB (Least Significant Bit) as
+first bit.
+
+After every package with data sent, a package with data is sent back.
+
+For everything except the last byte, the adapter will use the MSSP for
+accelerating the JTAG operations, otherwise bit-banging is used. Final usb
+byte is always bit-banged.
+
+===================
+The following describes the JTAG_CMD command which I deem unsuitable as TDI and
+TDO combination isn't accelerated and we have no way of tracking this in this
+project.
+===================
+
+First package for JTAG_CMD has the following structure
 
 struct // JTAG_CMD structure
 {
