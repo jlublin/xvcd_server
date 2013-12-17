@@ -38,8 +38,9 @@ class xvcd_server(socketserver.BaseRequestHandler):
             try:
                 [cmd, args] = data.split(b':')
             except ValueError:
-                print('Invalid data received')
-                return
+                print('Invalid data received, closing connection')
+                self.finish()
+                break
 
             if(cmd != b'shift'):
                 print('Unknown command: {}'.format(cmd))
@@ -90,7 +91,7 @@ class xvcd_server(socketserver.BaseRequestHandler):
 
             self.request.sendall(TDO.tobytes())
 
-        # TODO: Fix network code so we can get here
+        # Allow a new client to connect
         has_client_connected = False
 
 
