@@ -73,8 +73,8 @@ class xvcd_server(socketserver.BaseRequestHandler):
 
             print('TMS: {}\tTDI: {}'.format(TMS.bin, TDI.bin))
 
-            # TODO: Track jtag state to verify that we are in Exit-IR
-            if(TMS == bitstring.BitStream('0b11101')):
+            # Fix for bug in Xilinx ISE
+            if(jtag.get_state() == jtag.EXIT_1_IR and TMS == bitstring.BitStream('0b11101')):
                 print('Avoiding "route via Capture-IR"-bug')
                 self.request.sendall(b'\x1f')
                 continue
