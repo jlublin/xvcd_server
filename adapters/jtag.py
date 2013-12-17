@@ -26,7 +26,10 @@ class jtag:
     def get_state(self):
         return self.state
 
-    def track_tms(self, bitstream):
+    def track_tms(self, tms):
+        self.state = self.jtag_states[self.state][2] if tms else self.jtag_states[self.state][1]
+
+    def track_tms_stream(self, bitstream):
         for bit in bitstream:
             self.state = self.jtag_states[self.state][2] if bit else self.jtag_states[self.state][1]
 
