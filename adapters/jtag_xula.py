@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #------------------------------------------------------------------------------
 
+import bitstring
 from bitstring import BitStream
 from adapters.jtag import jtag
 import usb
@@ -86,8 +87,33 @@ class jtag_xula(jtag):
 
 
     def send_data(self, TMS_stream, TDI_stream):
+        TDO_stream = BitStream()
 
-        # TODO: use this method if the stream is short, otherwise use multiple values
+        index = 0
+        n = len(TDI_stream)
+
+        while(index < n):
+            if((self.get_state() == self.SHIFT_DR or self.get_state() == self.SHIFT_IR)
+                    and TMS_stream[index] == False):
+
+                end = TMS_stream.find(BitStream('0b1'), index)
+                if(end):
+                    end = end[0]
+                else:
+                    end = len(TMS_stream)
+
+                TDO_stream += self.jtag_data(TDI_stream[index:end])
+                index = end
+
+            else:
+                TDO_stream += self.jtag_general(TMS_stream[index:index+1],
+                                                TDI_stream[index:index+1])
+                index += 1
+
+        return TDO_stream
+
+
+    def jtag_general(self, TMS_stream, TDI_stream):
         TDO_stream = BitStream()
 
         for (tms, tdi) in zip(TMS_stream, TDI_stream):
@@ -111,6 +137,45 @@ class jtag_xula(jtag):
         r = self.handle.bulkRead(usb.ENDPOINT_IN + 1, 2)
 
         return (r[1] & 0x4) != 0;
+
+    def jtag_data(self, TDI_stream):		
+        TDO_stream = BitStream()
+
+        data = struct.pack("<BI", TDI_TDO_CMD, len(TDI_stream))
+        self.handle.bulkWrite(usb.ENDPOINT_OUT + 1, data)
+
+        # Split into 32 byte streams and send them
+        index = 0
+        while(index < len(TDI_stream)):
+#			print('Working on range {}:{}'.format(index,index+256))
+            bitstream = TDI_stream[index:index+256]
+            n_bits = bitstream.len
+
+            # Padding and reverse bytes
+            bitstream += bitstring.BitStream((8 - n_bits) % 8)
+            bitstream.reverse()
+            bitstream.byteswap()
+            data = bitstream.tobytes()
+
+            self.handle.bulkWrite(usb.ENDPOINT_OUT + 1, data)
+            r = self.handle.bulkRead(usb.ENDPOINT_IN + 1, len(data), timeout=10000)
+            
+            TDO_part = bitstring.pack('bytes:{}'.format(len(r)), r)
+
+            # Reverse and strip
+            TDO_part.byteswap()
+            TDO_part.reverse()
+            TDO_stream += TDO_part[0:n_bits]
+
+            index += 256
+
+        # TDI_TDO_CMD always ends with TMS=1
+        self.track_tms(True)
+
+        # Go back to "Shift DR" or "Shift IR"
+        self.jtag_general(BitStream('0b010'), BitStream('0b000'))
+
+        return TDO_stream
 
 
 
