@@ -78,8 +78,6 @@ class xvcd_server(socketserver.BaseRequestHandler):
             TMS = TMS[0:n_bits]
             TDI = TDI[0:n_bits]
 
-            print('TMS: {}\tTDI: {}'.format(TMS.bin, TDI.bin))
-
             # Fix for bug in Xilinx ISE
             if(jtag.get_state() == jtag.EXIT_1_IR and TMS == bitstring.BitStream('0b11101')):
                 print('Avoiding "route via Capture-IR"-bug')
@@ -87,8 +85,6 @@ class xvcd_server(socketserver.BaseRequestHandler):
                 continue
 
             TDO = jtag.send_data(TMS, TDI)
-
-            print('TDO: {}'.format(TDO.bin))
 
             # Add padding
             TDO += bitstring.BitStream((8 - TDO.len) % 8)

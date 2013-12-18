@@ -1,5 +1,9 @@
+Extra exit-DR loop also?
+
 TDI_TDO_CMD seems to hang at too high speeds. We might need to track IR to
 determine if TDI_CMD or TDO_CMD is in place...
+Using this the performance is now quite OK, maybe could be better if we faked
+writing and cached in largen parts of the bitstream.
 
 ===================
 The following describes the TDI_TDO_CMD which should be suitable for this
