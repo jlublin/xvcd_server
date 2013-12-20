@@ -19,7 +19,6 @@
 
 import socketserver
 import bitstring
-from adapters.jtag_xula import jtag_xula
 from math import ceil
 import argparse
 import importlib
@@ -119,7 +118,7 @@ if(__name__ == '__main__'):
         exit()
 
     global jtag
-    jtag = jtag_xula()
+    jtag = mod.jtag_adapter()
 
     if(opts.reset):
         jtag.reset()
