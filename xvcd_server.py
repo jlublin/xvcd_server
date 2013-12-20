@@ -104,6 +104,7 @@ if(__name__ == '__main__'):
     parser = argparse.ArgumentParser()
     parser.add_argument('--reset', action='store_true', help='Pulses the PROGRAM_B pin before starting server')
     parser.add_argument('adapter', help='Select which JTAG adapter to use')
+    parser.add_argument('--port', default=2542, type=int)
     opts = parser.parse_args()
 
     # Single client for now, deny other requests
@@ -123,6 +124,6 @@ if(__name__ == '__main__'):
     if(opts.reset):
         jtag.reset()
 
-    server = socketserver.TCPServer(('localhost', 2542), xvcd_server)
+    server = socketserver.TCPServer(('localhost', opts.port), xvcd_server)
     server.serve_forever()
 
