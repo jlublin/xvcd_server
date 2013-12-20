@@ -102,7 +102,7 @@ class xvcd_server(socketserver.BaseRequestHandler):
 if(__name__ == '__main__'):
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--reset', action='store_true')
+    parser.add_argument('--reset', action='store_true', help='Pulses the PROGRAM_B pin before starting server')
     opts = parser.parse_args()
 
     # Single client for now, deny other requests
