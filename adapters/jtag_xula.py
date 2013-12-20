@@ -81,6 +81,8 @@ class jtag_xula(jtag):
 
         self.handle.claimInterface(0)
 
+        self.ir = bitstring.BitStream('0b000000')
+
 
     def send_data(self, TMS_stream, TDI_stream):
         TDO_stream = BitStream()
@@ -168,7 +170,7 @@ class jtag_xula(jtag):
         else:
             TDO_stream = BitStream(n_bits)
 
-        # TDI_TDO_CMD always ends with TMS=1
+        # TDI_TDO_CMD and TDI_CMD always ends with TMS=1
         self.track_tms(True)
 
         # Go back to "Shift DR" or "Shift IR"
