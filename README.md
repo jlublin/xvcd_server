@@ -1,12 +1,9 @@
-=================
 Short description
 =================
 Xvcd Server is a program which interfaces Xilinx with JTAG adapters using the
 Xilinx Virtual Cable. This is achieved by starting a TCP server listening for
 xvc commands which are sent out to a jtag adapter.
 
-
-=====
 Usage
 =====
 
@@ -15,8 +12,6 @@ This server listens to TCP port 2542
 In Xilinx, Cable Setup choose "Open Cable Plug-in" and enter
 "xilinx_xvc host=127.0.0.1:2542 disableversioncheck=true"
 
-
-=========
 Thanks to
 =========
 
