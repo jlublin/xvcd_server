@@ -21,6 +21,7 @@ import socketserver
 import bitstring
 from adapters.jtag_xula import jtag_xula
 from math import ceil
+import argparse
 
 class xvcd_server(socketserver.BaseRequestHandler):
 
@@ -100,12 +101,19 @@ class xvcd_server(socketserver.BaseRequestHandler):
 
 if(__name__ == '__main__'):
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--reset', action='store_true')
+    opts = parser.parse_args()
+
     # Single client for now, deny other requests
     global has_client_connected
     has_client_connected = False
 
     global jtag
     jtag = jtag_xula()
+
+    if(opts.reset):
+        jtag.reset()
 
     server = socketserver.TCPServer(('localhost', 2542), xvcd_server)
     server.serve_forever()
