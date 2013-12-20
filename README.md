@@ -8,12 +8,16 @@ Usage
 =====
 
 Start xvcd_server.py
+
 This server listens to TCP port 2542
+
 In Xilinx, Cable Setup choose "Open Cable Plug-in" and enter
+
 "xilinx_xvc host=127.0.0.1:2542 disableversioncheck=true"
 
 Thanks to
 =========
 
 Many thanks to the person behind this blog post!
+
 http://debugmo.de/2012/02/xvcd-the-xilinx-virtual-cable-daemon/
