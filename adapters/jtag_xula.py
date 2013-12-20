@@ -21,6 +21,7 @@ from adapters.jtag import jtag
 import usb
 import sys
 import struct
+import time
 
 # Definitions of commands sent in USB packets.
 
@@ -177,6 +178,19 @@ class jtag_xula(jtag):
         self.jtag_general(BitStream('0b010'), BitStream('0b000'))
 
         return TDO_stream
+
+    def set_program(self, value):
+
+        data = struct.pack("<BB", PROG_CMD, value)
+        self.handle.bulkWrite(usb.ENDPOINT_OUT + 1, data)
+
+    def reset(self):
+
+        self.set_program(1)
+        self.set_program(0)
+        self.set_program(1)
+
+        time.sleep(0.03)
 
 
 
