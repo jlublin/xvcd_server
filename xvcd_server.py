@@ -26,6 +26,7 @@ import importlib
 class xvcd_server(socketserver.BaseRequestHandler):
 
     def handle(self):
+        global opts
         global has_client_connected
         global jtag
 
@@ -65,7 +66,8 @@ class xvcd_server(socketserver.BaseRequestHandler):
             # Split args in TMS data and TDI data
             args = [args[0:n_bytes], args[n_bytes:2*n_bytes]]
 
-            print('Bit string size: {}\tNumber of bytes {}'.format(n_bits, n_bytes)) 
+            if(opts.verbose >= 2):
+                print('Bit string size: {}\tNumber of bytes {}'.format(n_bits, n_bytes))
 
             TMS = bitstring.pack('bytes:{}'.format(n_bytes), args[0])
             TDI = bitstring.pack('bytes:{}'.format(n_bytes), args[1])
@@ -79,13 +81,21 @@ class xvcd_server(socketserver.BaseRequestHandler):
             TMS = TMS[0:n_bits]
             TDI = TDI[0:n_bits]
 
+            if(opts.verbose >= 3):
+                print('TDI bitstream: {}'.format(TDI.bin))
+
             # Fix for bug in Xilinx ISE
             if(jtag.get_state() == jtag.EXIT_1_IR and TMS == bitstring.BitStream('0b11101')):
-                print('Avoiding "route via Capture-IR"-bug')
+                if(opts.verbose >= 2):
+                    print('Avoiding "route via Capture-IR"-bug')
+
                 self.request.sendall(b'\x1f')
                 continue
 
             TDO = jtag.send_data(TMS, TDI)
+
+            if(opts.verbose >= 3):
+                print('TDO bitstream: {}'.format(TDO.bin))
 
             # Add padding
             TDO += bitstring.BitStream((8 - TDO.len) % 8)
@@ -105,6 +115,9 @@ if(__name__ == '__main__'):
     parser.add_argument('--reset', action='store_true', help='Pulses the PROGRAM_B pin before starting server')
     parser.add_argument('adapter', help='Select which JTAG adapter to use')
     parser.add_argument('--port', default=2542, type=int)
+    parser.add_argument('--verbose', '-v', action='count', default=0, help='Increase verbosity level')
+
+    global opts
     opts = parser.parse_args()
 
     # Single client for now, deny other requests
@@ -120,6 +133,7 @@ if(__name__ == '__main__'):
 
     global jtag
     jtag = mod.jtag_adapter()
+    jtag.set_verbosity(opts.verbose)
 
     if(opts.reset):
         jtag.reset()

@@ -84,6 +84,8 @@ class jtag_xula(jtag):
 
         self.ir = bitstring.BitStream('0b000000')
 
+    def set_verbosity(self, level):
+        self.verbosity_level = level
 
     def send_data(self, TMS_stream, TDI_stream):
         TDO_stream = BitStream()
@@ -104,7 +106,9 @@ class jtag_xula(jtag):
                 if(self.get_state() == self.SHIFT_IR):
                     self.ir = TDI_stream[index:end+1]
                     self.ir.reverse()
-                    print('New IR: {}'.format(self.ir.bin))
+
+                    if(self.verbosity_level >= 2):
+                        print('New IR: {}'.format(self.ir.bin))
 
                 if(self.ir == bitstring.BitStream('0b000101')):
                     TDO_stream += self.jtag_data(TDI_stream[index:end], False)
