@@ -22,6 +22,7 @@ import bitstring
 from adapters.jtag_xula import jtag_xula
 from math import ceil
 import argparse
+import importlib
 
 class xvcd_server(socketserver.BaseRequestHandler):
 
@@ -103,11 +104,19 @@ if(__name__ == '__main__'):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--reset', action='store_true', help='Pulses the PROGRAM_B pin before starting server')
+    parser.add_argument('adapter', help='Select which JTAG adapter to use')
     opts = parser.parse_args()
 
     # Single client for now, deny other requests
     global has_client_connected
     has_client_connected = False
+
+    # Load JTAG adapter
+    try:
+        mod = importlib.import_module('adapters.' + opts.adapter)
+    except:
+        print('Adapter {} failed to load. Exiting...'.format(opts.adapter))
+        exit()
 
     global jtag
     jtag = jtag_xula()

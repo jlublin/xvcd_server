@@ -192,6 +192,8 @@ class jtag_xula(jtag):
 
         time.sleep(0.03)
 
+# General name of class for server
+jtag_adapter = jtag_xula
 
 
 
